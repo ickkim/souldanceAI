@@ -1,0 +1,38 @@
+def custom_collate_fn(batch):
+    x_list = [items[0] for items in batch]
+    tempx_list = x_list.copy()
+    y_list = []
+    for items in batch:
+        y_list.extend([items[1]]*items[0].shape[0])
+    tempy_list = y_list.copy()
+
+    for i in range(len(y_list)):
+        if y_list[i] != 0:
+            for j in range(3): #to heal data imbalace
+                tempx_list = np.vstack((tempx_list, x_list[i]))    
+                tempy_list.append(y_list[i])
+
+    ylen_org = len(y_list)
+    while len(tempy_list) < ylen_org: #>516: # ylen_org: #  to fix the error, manually remedy using 516
+        i = randint(0, len(tempy_list)-1)
+        tempx_list = np.delete(tempx_list, i, axis=0)
+        del tempy_list[i]
+
+    x = np.concatenate(tempx_list, axis=0)
+    x = np.reshape(x, [])
+    print('x.shape='+str(x.shape))
+    x = torch.tensor(x, device=DEVICE, dtype=torch.float32)
+    x = x.view(-1,6150)
+
+    y = np.array(tempy_list).flatten()
+    print('y.shape='+str(y.shape))
+    y = torch.tensor(y, device=DEVICE, dtype=torch.long)
+    y = y.view(-1,7)
+
+    return x, y
+    
+    
+    
+-------------------------------------------------
+tempx_list = np.vstack((tempx_list, x_list[i]))
+IndexError: list index out of range
