@@ -1,5 +1,6 @@
 def custom_collate_fn(batch):
     x_list = [items[0] for items in batch]
+    x_list = np.concatenate(x_list, axis=0) #1st fix
     tempx_list = x_list.copy()
     y_list = []
     for items in batch:
@@ -34,5 +35,22 @@ def custom_collate_fn(batch):
     
     
 -------------------------------------------------
+1번째 error: line3 추가하면 실행됨.
 tempx_list = np.vstack((tempx_list, x_list[i]))
 IndexError: list index out of range
+
+-------------------------------------------------
+2번째 error: 
+Traceback (most recent call last):
+  File "main.py", line 212, in <module>
+    for i, x_y_pair in enumerate(train_loader):
+  File "/apps/GPGPU/RHEL7/Python/Python-3.6.6/lib/python3.6/site-packages/torch/utils/data/dataloader.py", line 615, in __next__
+    batch = self.collate_fn([self.dataset[i] for i in indices])
+  File "main.py", line 152, in custom_collate_fn
+    x = np.reshape(x, [])
+  File "/apps/GPGPU/RHEL7/Python/Python-3.6.6/lib/python3.6/site-packages/numpy/core/fromnumeric.py", line 232, in reshape
+    return _wrapfunc(a, 'reshape', newshape, order=order)
+  File "/apps/GPGPU/RHEL7/Python/Python-3.6.6/lib/python3.6/site-packages/numpy/core/fromnumeric.py", line 57, in _wrapfunc
+    return getattr(obj, method)(*args, **kwds)
+ValueError: cannot reshape array of size 4680150 into shape ()
+
