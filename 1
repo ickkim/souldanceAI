@@ -1,6 +1,27 @@
 def custom_collate_fn(batch):
+    '''
+    # start of given code
     x_list = [items[0] for items in batch]
-    x_list = np.concatenate(x_list, axis=0) #1st fix
+
+    #print(len(x_list))
+    print('len(x_list[0])='+str(len(x_list[0])))
+    x = np.concatenate(x_list, axis=0)
+    print('x.shape='+str(x.shape))
+    x = torch.tensor(x, device=DEVICE, dtype=torch.float32)
+
+    y_list = []
+    for items in batch:
+        y_list.extend([items[1]]*items[0].shape[0])
+    #print(len(y_list))
+    y = np.array(y_list).flatten()
+    print('y.shape=' + str(x.shape))
+    y = torch.tensor(y, device=DEVICE, dtype=torch.long)
+    return x, y
+    # end of the given code
+    '''
+    
+    x_list = [items[0] for items in batch]
+    x_list = np.concatenate(x_list, axis=0)
     tempx_list = x_list.copy()
     y_list = []
     for items in batch:
@@ -10,7 +31,10 @@ def custom_collate_fn(batch):
     for i in range(len(y_list)):
         if y_list[i] != 0:
             for j in range(3): #to heal data imbalace
-                tempx_list = np.vstack((tempx_list, x_list[i]))    
+                tempx_list = np.concatenate((x_list, [x_list[i]]), axis=0)
+                #tempx_list = np.vstack((tempx_list, x_list[i]))
+                #print(i)
+                #tempx_list.append(x_list[i])
                 tempy_list.append(y_list[i])
 
     ylen_org = len(y_list)
@@ -19,14 +43,16 @@ def custom_collate_fn(batch):
         tempx_list = np.delete(tempx_list, i, axis=0)
         del tempy_list[i]
 
+    #print(x_list.shape)
+    #print(tempx_list.shape)
+
     x = np.concatenate(tempx_list, axis=0)
-    x = np.reshape(x, [])
-    print('x.shape='+str(x.shape))
+    #print('x.shape='+str(x.shape))
     x = torch.tensor(x, device=DEVICE, dtype=torch.float32)
     x = x.view(-1,6150)
 
     y = np.array(tempy_list).flatten()
-    print('y.shape='+str(y.shape))
+    #print('y.shape='+str(y.shape))
     y = torch.tensor(y, device=DEVICE, dtype=torch.long)
     y = y.view(-1,7)
 
@@ -35,7 +61,7 @@ def custom_collate_fn(batch):
     
     
 -------------------------------------------------
-1번째 error: line3 추가하면 실행됨.
+1번째 error: line3 추가하면 첫번째 문제는 해결됨.
 tempx_list = np.vstack((tempx_list, x_list[i]))
 IndexError: list index out of range
 
@@ -54,3 +80,17 @@ Traceback (most recent call last):
     return getattr(obj, method)(*args, **kwds)
 ValueError: cannot reshape array of size 4680150 into shape ()
 
+-------------------------------------------------
+3번째 error: 아웃풋 형태를 맞춰야하는 문제인 것으로 예상함.
+Traceback (most recent call last):
+  File "main.py", line 214, in <module>
+    loss = loss_fn(logit, y)
+  File "/apps/GPGPU/RHEL7/Python/Python-3.6.6/lib/python3.6/site-packages/torch/nn/modules/module.py", line 489, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/apps/GPGPU/RHEL7/Python/Python-3.6.6/lib/python3.6/site-packages/torch/nn/modules/loss.py", line 904, in forward
+    ignore_index=self.ignore_index, reduction=self.reduction)
+  File "/apps/GPGPU/RHEL7/Python/Python-3.6.6/lib/python3.6/site-packages/torch/nn/functional.py", line 1970, in cross_entropy
+    return nll_loss(log_softmax(input, 1), target, weight, None, ignore_index, None, reduction)
+  File "/apps/GPGPU/RHEL7/Python/Python-3.6.6/lib/python3.6/site-packages/torch/nn/functional.py", line 1788, in nll_loss
+    .format(input.size(0), target.size(0)))
+ValueError: Expected input batch_size (709) to match target batch_size (174).
